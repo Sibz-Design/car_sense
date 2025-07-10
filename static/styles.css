@@ -1,0 +1,21 @@
+.sentiment-badge.positive {
+    background-color: #e53935; /* red */
+    color: white;
+}
+.sentiment-badge.negative {
+    background-color: #333; /* dark gray */
+    color: white;
+}
+.sentiment-badge.neutral {
+    background-color: #ccc;
+    color: black;
+}
+.comment-item.positive {
+    border-left: 4px solid #e53935;
+}
+.comment-item.negative {
+    border-left: 4px solid #333;
+}
+.comment-item.neutral {
+    border-left: 4px solid #ccc;
+}

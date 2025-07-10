@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Comments Analytics Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #FFFFFF;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background-image: url('https://cdn.wallpapersafari.com/1/40/aITupF9.webp');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #FFFFFF;
+            border-radius: 20px;
+            padding: 100px 30px;
+            border: 1px solid #FF0000;
+        }
+
+        .header h1 {
+            color: #FF0000;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: #FF0000;
+            border-radius: 15px;
+            padding: 10px;
+        }
+
+        .nav-tab {
+            padding: 12px 25px;
+            margin: 0 5px;
+            background: transparent;
+            border: none;
+            color: #FFFFFF;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .nav-tab:hover,
+        .nav-tab.active {
+            background: #FFFFFF;
+            color: #FF0000;
+            transform: translateY(-2px);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .controls {
+            background: #FFFFFF;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 10px 15px;
+            border: 2px solid #FF0000;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            min-width: 120px;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: #FF0000;
+        }
+
+        .btn {
+            background: #FF0000;
+            color: #FFFFFF;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #FFFFFF;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #FF0000;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: #FFFFFF;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+            flex-direction: column;
+            color: #666;
+        }
+
+        .loading i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #FF0000;
+            color: #FFFFFF;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #CC0000;
+        }
+
+        .comments-section {
+            background: #FFFFFF;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .comment-filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #FF0000;
+            background: #FFFFFF;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active {
+            background: #FF0000;
+            color: #FFFFFF;
+            border-color: #FF0000;
+        }
+
+        .comments-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .comment-item {
+            background: #FFFFFF;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #FF0000;
+        }
+
+        .comment-item.positive {
+            border-left-color: #00b894;
+        }
+
+        .comment-item.negative {
+            border-left-color: #FF0000;
+        }
+
+        .comment-item.neutral {
+            border-left-color: #fdcb6e;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .comment-text {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .comment-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .sentiment-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .sentiment-badge.positive {
+            background: #00b894;
+            color: #FFFFFF;
+        }
+
+        .sentiment-badge.negative {
+            background: #FF0000;
+            color: #FFFFFF;
+        }
+
+        .sentiment-badge.neutral {
+            background: #fdcb6e;
+            color: #333;
+        }
+
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .video-card {
+            background: #FFFFFF;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .video-content {
+            padding: 20px;
+        }
+
+        .video-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .video-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .video-description {
+            color: #777;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .video-sentiment {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group {
+                align-items: stretch;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+
+            .nav-tab {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+
+        .refresh-time {
+            text-align: center;
+            color: #333;
+            font-size: 0.9rem;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fab fa-youtube"></i> YouTube Comments Analytics</h1>
+            <p>Comprehensive analysis of YouTube channel comments and engagement</p>
+            <div class="refresh-time" id="lastRefresh"></div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="dashboard">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </button>
+            <button class="nav-tab" data-tab="sentiment">
+                <i class="fas fa-heart"></i> Sentiment Analysis
+            </button>
+            <button class="nav-tab" data-tab="videos">
+                <i class="fas fa-video"></i> Videos
+            </button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="dashboard">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="maxVideos">Max Videos</label>
+                    <input type="number" id="maxVideos" min="1" max="20" value="10">
+                </div>
+                <div class="control-group">
+                    <label for="maxComments">Comments per Video</label>
+                    <input type="number" id="maxComments" min="10" max="100" value="50">
+                </div>
+                <button class="btn" id="loadBtn">
+                    <i class="fas fa-sync-alt"></i> Load Data
+                </button>
+            </div>
+
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-comments"></i></div>
+                    <div class="number" id="totalComments">-</div>
+                    <div class="label">Total Comments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-video"></i></div>
+                    <div class="number" id="totalVideos">-</div>
+                    <div class="label">Videos Analyzed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-thumbs-up"></i></div>
+                    <div class="number" id="totalLikes">-</div>
+                    <div class="label">Total Likes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-heart"></i></div>
+                    <div class="number" id="avgLikes">-</div>
+                    <div class="label">Avg. Likes/Comment</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Comments by Video</div>
+                    <div id="pieChart" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <span>Click "Load Data" to view charts</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Sentiment Distribution</div>
+                    <div id="sentimentChart" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <span>Click "Load Data" to view charts</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Comments Over Time</div>
+                    <div id="barChart" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <span>Click "Load Data" to view charts</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Sentiment Trend (14 Days)</div>
+                    <div id="trendChart" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <span>Click "Load Data" to view charts</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sentiment Analysis Tab -->
+        <div class="tab-content" id="sentiment">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="sentimentVideos">Max Videos</label>
+                    <input type="number" id="sentimentVideos" min="1" max="10" value="5">
+                </div>
+                <div class="control-group">
+                    <label for="sentimentComments">Comments per Video</label>
+                    <input type="number" id="sentimentComments" min="10" max="50" value="20">
+                </div>
+                <button class="btn" id="sentimentBtn">
+                    <i class="fas fa-heart"></i> Analyze Sentiment
+                </button>
+            </div>
+
+            <div class="comments-section">
+                <div class="chart-title">Sample Comments by Sentiment</div>
+                <div class="comment-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="positive">Positive</button>
+                    <button class="filter-btn" data-filter="negative">Negative</button>
+                    <button class="filter-btn" data-filter="neutral">Neutral</button>
+                </div>
+                <div class="comments-list" id="commentsList">
+                    <div class="loading">
+                        <i class="fas fa-comments"></i>
+                        <span>Click "Analyze Sentiment" to view comments</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Videos Tab -->
+        <div class="tab-content" id="videos">
+            <div class="controls">
+                <button class="btn" id="videosBtn">
+                    <i class="fas fa-video"></i> Load Videos
+                </button>
+            </div>
+            <div class="videos-grid" id="videosGrid">
+                <div class="loading">
+                    <i class="fas fa-video"></i>
+                    <span>Click "Load Videos" to view video data</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilter = 'all';
+        let allComments = [];
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to corresponding tab and content
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Dashboard data loading
+        async function loadDashboardData() {
+            const loadBtn = document.getElementById('loadBtn');
+            const maxVideos = document.getElementById('maxVideos').value;
+            const maxComments = document.getElementById('maxComments').value;
+            
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            try {
+                const response = await fetch(`/api/chart-data?max_videos=${maxVideos}&max_comments=${maxComments}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateStats(data.summary);
+                createCharts(data);
+                updateRefreshTime();
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError('Failed to load dashboard data: ' + error.message);
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Load Data';
+            }
+        }
+
+        // Update statistics cards
+        function updateStats(summary) {
+            document.getElementById('totalComments').textContent = summary.total_comments.toLocaleString();
+            document.getElementById('totalVideos').textContent = summary.total_videos;
+            document.getElementById('totalLikes').textContent = summary.total_likes.toLocaleString();
+            document.getElementById('avgLikes').textContent = summary.avg_likes_per_comment;
+        }
+
+        // Create all charts
+        function createCharts(data) {
+            // Pie chart for comments by video
+            if (data.pie_chart && data.pie_chart.labels.length > 0) {
+                const pieData = [{
+                    values: data.pie_chart.values,
+                    labels: data.pie_chart.labels,
+                    type: 'pie',
+                    hole: 0.4,
+                    marker: {
+                        colors: data.pie_chart.colors
+                    },
+                    textinfo: 'label+percent',
+                    textposition: 'outside'
+                }];
+                
+                const pieLayout = {
+                    showlegend: true,
+                    height: 400,
+                    margin: { t: 20, b: 20, l: 20, r: 20 }
+                };
+                
+                Plotly.newPlot('pieChart', pieData, pieLayout, {responsive: true});
+            }
+
+            // Sentiment distribution chart
+            const sentimentData = data.summary.sentiment_counts;
+            const sentimentPieData = [{
+                values: [sentimentData.positive, sentimentData.negative, sentimentData.neutral],
+                labels: ['Positive', 'Negative', 'Neutral'],
+                type: 'pie',
+                hole: 0.4,
+                marker: {
+                    colors: ['#00b894', '#FF0000', '#fdcb6e']
+                },
+                textinfo: 'label+percent+value',
+                textposition: 'outside'
+            }];
+            
+            const sentimentLayout = {
+                showlegend: true,
+                height: 400,
+                margin: { t: 20, b: 20, l: 20, r: 20 }
+            };
+            
+            Plotly.newPlot('sentimentChart', sentimentPieData, sentimentLayout, {responsive: true});
+
+            // Bar chart for comments over time
+            if (data.bar_chart && data.bar_chart.labels.length > 0) {
+                const barData = [{
+                    x: data.bar_chart.labels,
+                    y: data.bar_chart.values,
+                    type: 'bar',
+                    marker: {
+                        color: '#FF0000'
+                    }
+                }];
+                
+                const barLayout = {
+                    title: '',
+                    xaxis: { title: 'Date' },
+                    yaxis: { title: 'Comments' },
+                    height: 400,
+                    margin: { t: 20, b: 50, l: 50, r: 20 }
+                };
+                
+                Plotly.newPlot('barChart', barData, barLayout, {responsive: true});
+            }
+
+            // Sentiment trend chart
+            if (data.sentiment_trend && data.sentiment_trend.dates.length > 0) {
+                const trendData = [
+                    {
+                        x: data.sentiment_trend.dates,
+                        y: data.sentiment_trend.positive,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'Positive',
+                        line: { color: '#00b894' }
+                    },
+                    {
+                        x: data.sentiment_trend.dates,
+                        y: data.sentiment_trend.negative,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'Negative',
+                        line: { color: '#FF0000' }
+                    },
+                    {
+                        x: data.sentiment_trend.dates,
+                        y: data.sentiment_trend.neutral,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'Neutral',
+                        line: { color: '#fdcb6e' }
+                    }
+                ];
+                
+                const trendLayout = {
+                    xaxis: { title: 'Date' },
+                    yaxis: { title: 'Comments' },
+                    height: 400,
+                    margin: { t: 20, b: 50, l: 50, r: 20 },
+                    showlegend: true
+                };
+                
+                Plotly.newPlot('trendChart', trendData, trendLayout, {responsive: true});
+            }
+        }
+
+        // Load sentiment analysis data
+        async function loadSentimentData() {
+            const sentimentBtn = document.getElementById('sentimentBtn');
+            const maxVideos = document.getElementById('sentimentVideos').value;
+            const maxComments = document.getElementById('sentimentComments').value;
+            
+            sentimentBtn.disabled = true;
+            sentimentBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            
+            try {
+                const response = await fetch(`/api/sentiment-data?max_videos=${maxVideos}&max_comments=${maxComments}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                allComments = data.sample_comments;
+                displayComments(currentFilter);
+                
+            } catch (error) {
+                console.error('Error loading sentiment data:', error);
+                showError('Failed to load sentiment data: ' + error.message);
+            } finally {
+                sentimentBtn.disabled = false;
+                sentimentBtn.innerHTML = '<i class="fas fa-heart"></i> Analyze Sentiment';
+            }
+        }
+
+        // Display comments based on filter
+        function displayComments(filter) {
+            const commentsList = document.getElementById('commentsList');
+            let commentsToShow = [];
+            
+            if (filter === 'all') {
+                commentsToShow = [
+                    ...allComments.positive.map(c => ({ ...c, sentiment: 'positive' })),
+                    ...allComments.negative.map(c => ({ ...c, sentiment: 'negative' })),
+                    ...allComments.neutral.map(c => ({ ...c, sentiment: 'neutral' }))
+                ];
+            } else {
+                commentsToShow = allComments[filter].map(c => ({ ...c, sentiment: filter })) || [];
+            }
+            
+            if (commentsToShow.length === 0) {
+                commentsList.innerHTML = '<div class="loading"><i class="fas fa-comments"></i><span>No comments found for this filter</span></div>';
+                return;
+            }
+            
+            const commentsHTML = commentsToShow.map(comment => `
+                <div class="comment-item ${comment.sentiment}">
+                    <div class="comment-author">${comment.author}</div>
+                    <div class="comment-text">${comment.comment} <strong>(${comment.sentiment.charAt(0).toUpperCase() + comment.sentiment.slice(1)})</strong></div>
+                    <div class="comment-meta">
+                        <span><i class="fas fa-thumbs-up"></i> ${comment.likeCount}</span>
+                        <span class="sentiment-badge ${comment.sentiment}">${comment.sentiment}</span>
+                        <span>${new Date(comment.date).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            commentsList.innerHTML = commentsHTML;
+        }
+
+        // Filter comments
+        function filterComments(filter) {
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+            
+            currentFilter = filter;
+            displayComments(filter);
+        }
+
+        // Load videos data
+        async function loadVideosData() {
+            const videosBtn = document.getElementById('videosBtn');
+            const videosGrid = document.getElementById('videosGrid');
+            
+            videosBtn.disabled = true;
+            videosBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            try {
+                const response = await fetch('/api/sentiment-data?max_videos=10&max_comments=30');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                displayVideos(data.videos_with_comments);
+                
+            } catch (error) {
+                console.error('Error loading videos data:', error);
+                showError('Failed to load videos data: ' + error.message);
+            } finally {
+                videosBtn.disabled = false;
+                videosBtn.innerHTML = '<i class="fas fa-video"></i> Load Videos';
+            }
+        }
+
+        // Display videos
+        function displayVideos(videos) {
+            const videosGrid = document.getElementById('videosGrid');
+            
+            if (!videos || videos.length === 0) {
+                videosGrid.innerHTML = '<div class="loading"><i class="fas fa-video"></i><span>No videos found</span></div>';
+                return;
+            }
+            
+            const videosHTML = videos.map(video => {
+                const sentimentCounts = { positive: 0, negative: 0, neutral: 0 };
+                video.comments.forEach(comment => {
+                    sentimentCounts[comment.sentiment]++;
+                });
+                
+                return `
+                    <div class="video-card">
+                        ${video.thumbnail ? `<img src="${video.thumbnail}" alt="${video.title}" class="video-thumbnail">` : ''}
+                        <div class="video-content">
+                            <div class="video-title">${video.title}</div>
+                            <div class="video-stats">
+                                <span><i class="fas fa-comments"></i> ${video.commentCount} comments</span>
+                                <span><i class="fas fa-calendar"></i> ${new Date(video.publishedAt).toLocaleDateString()}</span>
+                            </div>
+                            <div class="video-description">${video.description}</div>
+                            <div class="video-sentiment">
+                                <span class="sentiment-badge positive">${sentimentCounts.positive}</span>
+                                <span class="sentiment-badge negative">${sentimentCounts.negative}</span>
+                                <span class="sentiment-badge neutral">${sentimentCounts.neutral}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            videosGrid.innerHTML = videosHTML;
+        }
+
+        // Utility functions
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+            
+            // Insert at the top of the active tab content
+            const activeTab = document.querySelector('.tab-content.active');
+            activeTab.insertBefore(errorDiv, activeTab.firstChild);
+            
+            // Remove error after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 5000);
+        }
+
+        function updateRefreshTime() {
+            const now = new Date();
+            document.getElementById('lastRefresh').textContent = 
+                `Last updated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+        }
+
+        // Auto-refresh functionality
+        let autoRefreshInterval;
+
+        function startAutoRefresh() {
+            // Auto-refresh every 5 minutes
+            autoRefreshInterval = setInterval(() => {
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab.id === 'dashboard') {
+                    loadDashboardData();
+                }
+            }, 300000); // 5 minutes
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial refresh time
+            updateRefreshTime();
+            
+            // Start auto-refresh
+            startAutoRefresh();
+            
+            // Add event listeners for tab switching
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+
+            // Add event listeners for buttons
+            document.getElementById('loadBtn').addEventListener('click', loadDashboardData);
+            document.getElementById('sentimentBtn').addEventListener('click', loadSentimentData);
+            document.getElementById('videosBtn').addEventListener('click', loadVideosData);
+
+            // Add event listeners for filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => filterComments(btn.dataset.filter));
+            });
+
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case '1':
+                            e.preventDefault();
+                            switchTab('dashboard');
+                            break;
+                        case '2':
+                            e.preventDefault();
+                            switchTab('sentiment');
+                            break;
+                        case '3':
+                            e.preventDefault();
+                            switchTab('videos');
+                            break;
+                        case 'r':
+                            e.preventDefault();
+                            const activeTab = document.querySelector('.tab-content.active');
+                            if (activeTab.id === 'dashboard') {
+                                loadDashboardData();
+                            } else if (activeTab.id === 'sentiment') {
+                                loadSentimentData();
+                            } else if (activeTab.id === 'videos') {
+                                loadVideosData();
+                            }
+                            break;
+                    }
+                }
+            });
+
+            // Add click handlers for programmatic tab switching
+            window.switchTab = switchTab;
+        });
+
+        // Cleanup when page unloads
+        window.addEventListener('beforeunload', function() {
+            stopAutoRefresh();
+        });
+
+        // Responsive chart resizing
+        window.addEventListener('resize', function() {
+            // Resize all Plotly charts
+            ['pieChart', 'sentimentChart', 'barChart', 'trendChart'].forEach(chartId => {
+                const element = document.getElementById(chartId);
+                if (element && element.data) {
+                    Plotly.Plots.resize(element);
+                }
+            });
+        });
+
+        // Export functionality
+        function exportData(format) {
+            alert(`Export to ${format} functionality would be implemented here`);
+        }
+
+        // Add export buttons to controls (optional)
+        function addExportButtons() {
+            const controls = document.querySelectorAll('.controls');
+            const exportHTML = `
+                <div class="control-group">
+                    <label>Export</label>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn" style="padding: 8px 12px; font-size: 0.8rem;" onclick="exportData('CSV')">
+                            <i class="fas fa-file-csv"></i> CSV
+                        </button>
+                        <button class="btn" style="padding: 8px 12px; font-size: 0.8rem;" onclick="exportData('JSON')">
+                            <i class="fas fa-file-code"></i> JSON
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            controls.forEach(control => {
+                control.insertAdjacentHTML('beforeend', exportHTML);
+            });
+        }
+
+        // Add tooltips for better UX
+        function addTooltips() {
+            document.querySelectorAll('.stat-card').forEach(card => {
+                const label = card.querySelector('.label').textContent;
+                const number = card.querySelector('.number').textContent;
+                card.title = `${label}: ${number}`;
+            });
+        }
+
+        // Theme switching functionality (optional)
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+        }
+
+        // Initialize theme on load
+        document.addEventListener('DOMContentLoaded', loadTheme);
+
+        // Add notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                ${message}
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; color: inherit; float: right; cursor: pointer;">×</button>
+            `;
+            
+            if (!document.querySelector('style[data-notifications]')) {
+                const style = document.createElement('style');
+                style.setAttribute('data-notifications', 'true');
+                style.textContent = `
+                    .notification {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        color: #FFFFFF;
+                        z-index: 1000;
+                        max-width: 400px;
+                        animation: slideIn 0.3s ease;
+                    }
+                    .notification.success { background: #00b894; }
+                    .notification.error { background: #FF0000; }
+                    .notification.info { background: #FF0000; }
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideIn 0.3s ease reverse';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // Enhanced error handling
+        function handleApiError(error, context) {
+            console.error(`Error in ${context}:`, error);
+            showNotification(`Failed to ${context}: ${error.message}`, 'error');
+        }
+
+        // Add loading states for better UX
+        function setLoadingState(elementId, isLoading, loadingText = 'Loading...') {
+            const element = document.getElementById(elementId);
+            if (isLoading) {
+                element.innerHTML = `
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <span>${loadingText}</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Add search functionality for comments
+        function searchComments(query) {
+            const commentItems = document.querySelectorAll('.comment-item');
+            commentItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                const matches = text.includes(query.toLowerCase());
+                item.style.display = matches ? 'block' : 'none';
+            });
+        }
+
+        // Add search input to sentiment tab
+        function addSearchFeature() {
+            const sentimentSection = document.querySelector('#sentiment .comments-section');
+            const searchHTML = `
+                <div style="margin-bottom: 15px; text-align: center;">
+                    <input type="text" id="commentSearch" placeholder="Search comments..." 
+                           style="padding: 10px 15px; border: 2px solid #FF0000; border-radius: 25px; width: 300px; max-width: 100%;"
+                           oninput="searchComments(this.value)">
+                </div>
+            `;
+            sentimentSection.insertAdjacentHTML('afterbegin', searchHTML);
+        }
+
+        // Initialize search feature
+        document.addEventListener('DOMContentLoaded', addSearchFeature);
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey) {
+                switch(e.key) {
+                    case 'd':
+                        e.preventDefault();
+                        loadDashboardData();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        loadSentimentData();
+                        break;
+                    case 'v':
+                        e.preventDefault();
+                        loadVideosData();
+                        break;
+                }
+            }
+        });
+
+        // Add help tooltip
+        function showHelp() {
+            const helpText = `
+                Keyboard Shortcuts:
+                • Ctrl/Cmd + 1, 2, 3: Switch tabs
+                • Ctrl/Cmd + R: Refresh current tab
+                • Alt + D: Load dashboard data
+                • Alt + S: Load sentiment data
+                • Alt + V: Load videos data
+                
+                Features:
+                • Auto-refresh every 5 minutes
+                • Real-time sentiment analysis
+                • Interactive charts
+                • Comment filtering and search
+            `;
+            alert(helpText);
+        }
+
+        // Add help button to header
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('.header');
+            const helpButton = document.createElement('button');
+            helpButton.innerHTML = '<i class="fas fa-question-circle"></i> Help';
+            helpButton.className = 'btn';
+            helpButton.style.cssText = 'position: absolute; top: 20px; right: 20px; padding: 8px 12px; font-size: 0.9rem;';
+            helpButton.onclick = showHelp;
+            header.style.position = 'relative';
+            header.appendChild(helpButton);
+        });
+    </script>
+</body>
+</html>
